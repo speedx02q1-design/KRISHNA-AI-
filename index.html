@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090711">
+<title>KRISHNA AI — Your Study Companion</title>
+<style>
+:root{--bg:#090711;--panel:#110d1d;--line:#2b2140;--purple:#9b5cff;--purple2:#7138d4;--text:#f5f0ff;--muted:#a99dbb}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% -10%,#29134a 0,transparent 35%),var(--bg);color:var(--text);font:15px/1.5 Arial,sans-serif;min-height:100vh}
+button,textarea{font:inherit}button{cursor:pointer}
+header{height:68px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#0b0812}
+.brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:bold}.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#bd83ff,#6424c8);display:grid;place-items:center}
+.tag{color:#cbb4ff;font-size:12px;background:#211533;border:1px solid #3d2858;border-radius:30px;padding:6px 11px}
+main{max-width:880px;margin:auto;padding:28px 18px 30px}
+.welcome{text-align:center;margin:5vh auto 28px}.eyebrow{color:#c59aff;font-size:12px;letter-spacing:2px;font-weight:bold}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.15;margin:13px 0}h1 em{font-style:normal;background:linear-gradient(90deg,#fff,#b98aff);-webkit-background-clip:text;color:transparent}
+.sub{color:var(--muted);max-width:570px;margin:auto}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:28px auto;max-width:850px}
+.tool{background:linear-gradient(145deg,#171126,#100c19);border:1px solid var(--line);border-radius:14px;padding:15px;text-align:left;color:white;min-height:112px}
+.tool:hover{border-color:#8951d0}.tool b{display:block;margin:8px 0 3px}.tool small{color:var(--muted)}
+.chat{max-width:850px;margin:20px auto;background:#110d1d;border:1px solid var(--line);border-radius:15px;padding:15px;min-height:130px}
+.msg{display:flex;gap:10px;margin:12px 0;align-items:flex-start}.bubble{white-space:pre-wrap;overflow-wrap:anywhere;padding:10px 13px;border-radius:12px;max-width:90%}.user .bubble{background:#211632;border:1px solid #392653}.ai .bubble{background:#171126}
+.composer{max-width:850px;margin:12px auto;background:#151020;border:1px solid #44305f;border-radius:16px;padding:11px}
+textarea{width:100%;resize:vertical;min-height:75px;max-height:160px;background:transparent;border:0;outline:0;color:white;padding:8px}
+.bottom{display:flex;justify-content:space-between;align-items:center}.hint{font-size:11px;color:#8d809e}
+.send{border:0;border-radius:10px;background:var(--purple);color:white;padding:9px 18px;font-weight:bold}.send:disabled{opacity:.5}
+footer{text-align:center;color:#756982;padding:20px;font-size:12px}
+@media(max-width:650px){.tools{grid-template-columns:repeat(2,1fr)}header{padding:0 14px}.tag{font-size:10px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">K</div> KRISHNA AI</div><span class="tag">YOUR STUDY COMPANION</span></header>
+<main>
+ <section class="welcome" id="welcome"><div class="eyebrow">WELCOME TO KRISHNA AI</div><h1>Your personal <em>AI study companion.</em></h1><p class="sub">Ask questions, solve maths, create notes and prepare for your next exam — all in one place.</p></section>
+ <section class="tools" id="tools">
+  <button class="tool" onclick="choose('study')">📚<b>Study Mode</b><small>Understand any topic</small></button>
+  <button class="tool" onclick="choose('math')">➗<b>Maths Helper</b><small>Step-by-step solutions</small></button>
+  <button class="tool" onclick="choose('notes')">📝<b>Notes Maker</b><small>Create clear notes</small></button>
+  <button class="tool" onclick="choose('quiz')">🎯<b>Quiz Maker</b><small>Test your knowledge</small></button>
+ </section>
+ <section class="chat" id="chat"><div class="msg ai"><div class="bubble">👋 Hello! I am KRISHNA AI. How can I help you today?</div></div></section>
+ <section class="composer"><textarea id="question" placeholder="Ask KRISHNA AI anything..."></textarea><div class="bottom"><span class="hint">Enter to send · Shift + Enter for new line</span><button class="send" id="send">Send ↑</button></div></section>
+</main>
+<footer>KRISHNA AI • Your Personal Study Companion</footer>
+<script>
+let currentMode="chat",busy=false;
+function choose(mode){currentMode=mode;const p={study:"Explain this topic step by step...",math:"Solve this maths problem...",notes:"Make study notes about...",quiz:"Create a quiz about..."};document.getElementById("question").placeholder=p[mode];document.getElementById("question").focus()}
+function addMessage(type,text){const row=document.createElement("div");row.className="msg "+type;const bubble=document.createElement("div");bubble.className="bubble";bubble.textContent=text;row.appendChild(bubble);document.getElementById("chat").appendChild(row);return bubble}
+async function sendMessage(){const input=document.getElementById("question"),message=input.value.trim();if(!message||busy)return;input.value="";document.getElementById("welcome").style.display="none";document.getElementById("tools").style.display="none";addMessage("user",message);const answer=addMessage("ai","Thinking...");busy=true;document.getElementById("send").disabled=true;try{const r=await fetch("/.netlify/functions/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,mode:currentMode})});const data=await r.json();if(!r.ok)throw new Error(data.error||"AI connection failed");answer.textContent=data.reply||"No answer received."}catch(e){answer.textContent="Could not connect to KRISHNA AI.\n\nMake sure the Netlify Function is deployed and GEMINI_API_KEY is set in Netlify Environment Variables.\n\n"+e.message}finally{busy=false;document.getElementById("send").disabled=false}}
+document.getElementById("send").onclick=sendMessage;document.getElementById("question").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
+</script>
+</body>
+</html>
